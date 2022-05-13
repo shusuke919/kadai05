@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Basic template</title>
+    <style>body{padding:0;margin:0;background:#333;}h1{padding:0;margin:0;font-size:50%;color:white;}.mouse{font-size:50%;background: white;}</style>
+</head>
+<body>
+
+<!-- MAP[START] -->
+<h1>Select Maps Type
+    <select id="type">
+        <option value="road" selected>road</option>
+        <option value="aerial">aerial</option>
+        <option value="canvasDark">canvasDark</option>
+        <option value="canvasLight">canvasLight</option>
+        <option value="birdseye">birdseye</option>
+        <option value="grayscale">grayscale</option>
+        <option value="streetside">streetside</option>
+    </select>
+</h1>
+<div><button id='move'>夢中とは夢の中</button></div>
+
+<div id="myMap" style='position:relative;width:100%;height:450px;'></div>
+
+<div id="mapViewChangeStart" class="mouse">Map move Start</div>
+<div id="mapViewChange" class="mouse">Map move</div>
+<div id="mapViewChangEnd" class="mouse">Map move End</div>
+<div id="mapClick" class="mouse">Click</div>
+<div id="mapDblClick" class="mouse">DBL Click</div>
+<div id="mapRightClick" class="mouse">Right Click</div>
+<div id="mapMousedown" class="mouse">MouseDown</div>
+<div id="mapMouseout" class="mouse">MouseOut</div>
+<div id="mapMouseover" class="mouse">MouseOver</div>
+<div id="mapMouseup" class="mouse">MouseUp</div>
+<div id="mapMousewheel" class="mouse">Mousewheel</div>
+<div id="maptypechanged" class="mouse">Map type Change</div>
+
+<!-- MAP[END] -->
+
+
+<!-- [ MapTypeId ] https://msdn.microsoft.com/en-us/library/mt712700.aspx -->
+<script src='https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=ApCHrmMRRiJxJqxnhZcTXZLB54btxZ2bFMfKqymz7o08DqnvYkMp0ggwd6PcUga0' async defer></script>
+<script>
+   //***********************************************************************************
+   // BingMaps Init
+   //***********************************************************************************
+    let map, typeid;
+    function GetMap() {
+            map = new Microsoft.Maps.Map('#myMap', {
+            center: new Microsoft.Maps.Location(35.0631603, 134.6181228), //Location center position
+            mapTypeId: Microsoft.Maps.MapTypeId.load, //Type: [load, aerial,canvasDark,canvasLight,birdseye,grayscale,streetside]
+            zoom: 8  //Zoom:1=zoomOut, 20=zoomUp[ 1~20 ]
+         });
+
+         //Add view change events to the map.
+        //  マップ上にイベントを追加する
+        //   Microsoft.Maps.Events.addHandler(map, 'イベント', function () {});
+        Microsoft.Maps.Events.addHandler(map, 'viewchangestart', function () { highlight('mapViewChangeStart'); });
+        Microsoft.Maps.Events.addHandler(map, 'viewchange', function () { highlight('mapViewChange'); });
+        Microsoft.Maps.Events.addHandler(map, 'viewchangeend', function () { highlight('mapViewChangEnd'); });
+       
+        // Add mouse events to the map.
+        Microsoft.Maps.Events.addHandler(map, 'click', function () { highlight('mapClick'); });
+        Microsoft.Maps.Events.addHandler(map, 'dblclick', function () { highlight('mapDblClick'); });
+        Microsoft.Maps.Events.addHandler(map, 'rightclick', function () { highlight('mapRightClick'); });
+        Microsoft.Maps.Events.addHandler(map, 'mousedown', function () { highlight('mapMousedown'); });
+        Microsoft.Maps.Events.addHandler(map, 'mouseout', function () { highlight('mapMouseout'); });
+        Microsoft.Maps.Events.addHandler(map, 'mouseover', function () { highlight('mapMouseover'); });
+        Microsoft.Maps.Events.addHandler(map, 'mouseup', function () { highlight('mapMouseup'); });
+        Microsoft.Maps.Events.addHandler(map, 'mousewheel', function () { highlight('mapMousewheel'); });
+        // Add addition map event handlers
+        Microsoft.Maps.Events.addHandler(map, 'maptypechanged', function () { highlight('maptypechanged'); });
+
+       //Get MAP Infomation
+       let center = map.getCenter();
+
+       //Create custom Pushpin
+     let pin = new Microsoft.Maps.Pushpin(center, {
+        
+
+        enableHoverStyle:true,   //マウスオーバー
+        enableClickedStyle:true, //クリックした後のアニメーション
+        draggable:false,         //ピンを移動できるかどうか
+        color: 'red',            //色の指定
+        title: '夢中とは夢の中',       //PushPin:title
+        subTitle: '星の宿',  //PushPin:subtitle
+        text: 'J'                 //PushPin:text
+        // visible:true             //最初から表示するかどうか
+       
+        
+        
+       
+        
+        
+});
+
+//Add the pushpin to the map
+map.entities.push(pin);
+    }
+    //***********************************************************************************
+    //Select MapTypeID
+    //***********************************************************************************
+    // 地図の種類を変更する！
+    document.getElementById("type").onchange = function(){
+        typeid = this.value;
+        if(typeid == "load") type = {mapTypeId: Microsoft.Maps.MapTypeId.load};
+        if(typeid == "aerial") type = {mapTypeId: Microsoft.Maps.MapTypeId.aerial};
+        if(typeid == "canvasDark") type = {mapTypeId: Microsoft.Maps.MapTypeId.canvasDark};
+        if(typeid == "canvasLight") type = {mapTypeId: Microsoft.Maps.MapTypeId.canvasLight};
+        if(typeid == "birdseye") type = {mapTypeId: Microsoft.Maps.MapTypeId.birdseye};
+        if(typeid == "grayscale") type = {mapTypeId: Microsoft.Maps.MapTypeId.grayscale};
+        if(typeid == "streetside") type = {mapTypeId: Microsoft.Maps.MapTypeId.streetside};
+        //add type
+        map.setView(type);
+    }
+     //map.setView: ボタンクリックで場所変更
+     document.getElementById("move").onclick = function (){
+        map.setView({
+            mapTypeId: Microsoft.Maps.MapTypeId.load,
+            center: new Microsoft.Maps.Location(35.0631603, 134.6181228),
+            zoom: 15
+        });
+    }
+    // マップイベントで色を変える
+    //  //Event:ColorChange
+     function highlight(id) {
+        //Highlight the div to indicate that the event has fired.
+        document.getElementById(id).style.background = 'LightGreen';
+        //Remove the highlighting after a second.
+        setTimeout(function () { document.getElementById(id).style.background = 'white'; }, 1000);
+    }
+
+
+</script>
+
+
+</body>
+</html>
