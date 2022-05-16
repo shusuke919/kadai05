@@ -3,7 +3,22 @@ _<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <title>Basic template</title>
-    <style>body{padding:0;margin:0;background:#333;}h1{padding:0;margin:0;font-size:50%;color:white;}.mouse{font-size:50%;background: white;}</style>
+    <style>body{padding:0;margin:0;background:#333;}
+    h1{padding:0;margin:0;font-size:50%;color:white;}
+    .mouse{font-size:50%;background: white;}
+    .directionsContainer {
+            width: 380px;
+            height: 50%;
+            overflow-y: auto;
+            float: left;
+        }
+    #myMap {
+            position: relative;
+            width: calc(100% - 380px);
+            height: 50%;
+            float: left;
+        }</style>
+   
 </head>
 <body>
 
@@ -20,9 +35,13 @@ _<!DOCTYPE html>
     </select>
 </h1>
 <div><button id='move'>夢中とは夢の中</button></div>
-<div><button id='search'>検索</button></div>
 
-<div id="myMap" style='position:relative;width:100%;height:450px;'></div>
+<div class="directionsContainer">
+  <div id="directionsPanel"></div>
+  <div id="directionsItinerary"></div>
+</div>
+
+<div id="myMap"></div>
 
 <div id="mapViewChangeStart" class="mouse">Map move Start</div>
 <div id="mapViewChange" class="mouse">Map move</div>
@@ -36,6 +55,9 @@ _<!DOCTYPE html>
 <div id="mapMouseup" class="mouse">MouseUp</div>
 <div id="mapMousewheel" class="mouse">Mousewheel</div>
 <div id="maptypechanged" class="mouse">Map type Change</div>
+
+
+
 
 <!-- MAP[END] -->
 
@@ -70,10 +92,124 @@ _<!DOCTYPE html>
 
         // ここから　BingsMapを書いていく
         map = new Microsoft.Maps.Map('#myMap', {
+
             center: new Microsoft.Maps.Location(lat, lon), //Location center position
             mapTypeId: Microsoft.Maps.MapTypeId.load, //Type: [load, aerial,canvasDark,canvasLight,birdseye,grayscale,streetside]
             zoom: 8  //Zoom:1=zoomOut, 20=zoomUp[ 1~20 ]
+
+
+            
+
+           
          });
+
+         
+        
+        //  経路
+
+        map = new Microsoft.Maps.Map('#myMap', {});
+
+//Create a layer for rendering the data that is along a route.
+dataLayer = new Microsoft.Maps.Layer();
+
+//Add the layer to the map.
+map.layers.insert(dataLayer);
+
+//Load the directions and spatial data service modules.
+Microsoft.Maps.loadModule(['Microsoft.Maps.Directions', 'Microsoft.Maps.SpatialDataService'], function () {
+    //Create an instance of the directions manager.
+    directionsManager = new Microsoft.Maps.Directions.DirectionsManager(map);
+
+    //Specify where to display the route instructions.
+    directionsManager.setRenderOptions({ itineraryContainer: '#directionsItinerary' });
+
+    //Specify the where to display the input panel
+    directionsManager.showInputPanel('directionsPanel');
+
+    //Add event handler to directions manager.
+    Microsoft.Maps.Events.addHandler(directionsManager, 'directionsUpdated', directionsUpdated);
+});
+
+
+         function directionsUpdated(e) {
+            dataLayer.clear();
+
+            var currentRoute = directionsManager.getCurrentRoute();
+
+            if (!currentRoute) {
+                alert('No route found.');
+                return;
+            }
+
+            var routeRequest = directionsManager.getRequestOptions();
+
+            var routeMode = getRouteMode(routeRequest);
+
+            if(!routeMode){
+                alert('Transit mode is not supported for near route queries.');
+                return;
+            }
+
+            //Create a query to get nearby data.
+            var queryOptions = {
+                queryUrl: sdsDataSourceUrl,
+                spatialFilter: {
+                    spatialFilterType: 'nearRoute',
+                    start: currentRoute.routeLegs[0].startWaypointLocation,
+                    end: currentRoute.routeLegs[0].endWaypointLocation,
+                    travelMode: getRouteMode(routeRequest),
+                    optimize: getRouteOptimization(routeRequest)
+                }
+            };
+
+            //Process the query.
+            Microsoft.Maps.SpatialDataService.QueryAPIManager.search(queryOptions, map, function (data) {
+                //Add results to the map.
+                dataLayer.add(data);
+            });
+        }
+
+        function directionsUpdated(e) {
+            dataLayer.clear();
+
+            var currentRoute = directionsManager.getCurrentRoute();
+
+            if (!currentRoute) {
+                alert('No route found.');
+                return;
+            }
+
+            var routeRequest = directionsManager.getRequestOptions();
+
+            var routeMode = getRouteMode(routeRequest);
+
+            if(!routeMode){
+                alert('Transit mode is not supported for near route queries.');
+                return;
+            }
+
+            //Create a query to get nearby data.
+            var queryOptions = {
+                queryUrl: sdsDataSourceUrl,
+                spatialFilter: {
+                    spatialFilterType: 'nearRoute',
+                    start: currentRoute.routeLegs[0].startWaypointLocation,
+                    end: currentRoute.routeLegs[0].endWaypointLocation,
+                    travelMode: getRouteMode(routeRequest),
+                    optimize: getRouteOptimization(routeRequest)
+                }
+            };
+
+            //Process the query.
+            Microsoft.Maps.SpatialDataService.QueryAPIManager.search(queryOptions, map, function (data) {
+                //Add results to the map.
+                dataLayer.add(data);
+            });
+        }
+
+
+// 　　経路終わり
+
 
          //Add view change events to the map.
         //  マップ上にイベントを追加する
@@ -186,6 +322,7 @@ map.entities.push(pin2);
         //Remove the highlighting after a second.
         setTimeout(function () { document.getElementById(id).style.background = 'white'; }, 1000);
     }
+
 
 
 

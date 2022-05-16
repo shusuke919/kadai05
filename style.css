@@ -1,4 +1,22 @@
-body {
-  margin: 0;
-  padding: 0;
-}
+
+        html, body {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            background: black;
+        }
+
+        .directionsContainer {
+            width: 380px;
+            height: 100%;
+            overflow-y: auto;
+            float: left;
+        }
+
+        #myMap {
+            position: relative;
+            width: calc(100% - 380px);
+            height: 100%;
+            float: left;
+        }
+  
